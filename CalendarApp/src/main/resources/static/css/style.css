@@ -1,0 +1,71 @@
+@charset "UTF-8";
+
+.calendar-container {
+	border: 3px solid black;
+	height: auto;
+	margin: 0 auto;
+	border-radius: 5px;
+	color: #1a1a1a;
+	width: 1000px;
+}
+
+h1 {
+	height: 80px;
+	line-height: 80px;
+	text-align: center;
+	font-size: 24px;
+	margin: 0;
+}
+
+.dayOfweekString {
+	text-align: left;
+	vertical-align: top;
+	height: 80px;
+	padding: 5px 10px;
+	border: 1px solid black;
+	font-weight: bold;
+}
+
+.day {
+	padding: 0 30px 100px;
+}
+
+table {
+	width: 100%;
+	table-layout: fixed;
+}
+
+th {
+	text-align: center;
+	padding: 10px;
+	border: 1px solid black;
+	font-weight: normal;
+	font-size: 14px;
+}
+
+td {
+	text-align: left;
+	vertical-align: top;
+	height: 80px;
+	padding: 5px 10px;
+	border: 1px solid black;
+	font-weight: bold;
+}
+
+.today-color {
+	border: 3px solid #2ecc71;
+}
+.gray-color {
+	background: darkgray;
+}
+
+.holiday-color {
+	color:red !important;
+}
+.day td:first-child {
+	color: red;
+}
+
+.day td:last-child {
+	color: blue;
+}
