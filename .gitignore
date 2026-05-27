@@ -1,1 +1,12 @@
+# Eclipseが自動生成するビルドフォルダを除外
 bin/
+build/
+
+# Eclipseの設定ファイル群を除外
+.settings/
+.metadata/
+.classpath
+.project
+
+# macOS特有のゴミファイル（もしあれば）
+.DS_Store
