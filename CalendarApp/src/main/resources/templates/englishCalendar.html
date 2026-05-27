@@ -8,6 +8,40 @@
 </head>
 
 <body>
-	<div class="calendar-container"
-		<a th:href="@{/calendar(year=${month == 1)
-	
+	<div class="calendar-container">
+		<a th:href="@{/calendar/en(year=${month == 1 ? year - 1 : year}, month=${month == 1 ? 12 : month - 1})}">
+			<button>Last Month</button>
+		</a>
+		<a th:href="@{/calendar/en(year=${month == 12 ? year + 1 : year}, month=${month == 12 ? 1 : month + 1})}">
+			<button>Next Month</button>
+		</a>
+		<h1 th:text="${yearMonth}">Calendar</h1>
+		<form th:action="@{/calendar/en}" method="get">
+			<p>Language</p><select name="changeLanguage" onchange="location.href=value;">
+				<option th:value="@{/calendar/en(year=${year}, month=${month},)}">English</option>
+				<option th:value="@{/calendar(year=${year}, month=${month})}">Japanese</option>
+			</select>
+			<p>Weather</p>
+			<select id="weather-place" onchange="location.href=value">
+				<option th:value="35.6785,139.6823">Tokyo</option>
+				<option th:value="40.71,-74.01">New York</option>
+			</select>
+		</form>
+		<table class="calendar">
+			<tr class="day">
+				<th th:each="dayOfWeek : ${dayList}" th:text="${dayOfWeek}">dayOfWeek</th>
+			</tr>
+			<tr class="day" th:each="week : ${date}">
+				<td class="daydate" th:each="day : ${week}"
+					th:classappend="${day.today ? 'today-color' : ''}+ ${day.lastMonth || day.nextMonth ? 'gray-color' : ''}+${day.holidayName != null ? 'holiday-color' : ''}">
+					<div th:text="${day.text}">day</div>
+					<div th:if="${day.holidayName != null}" th:text="${day.holidayName}">holiday</div>
+					<div th:if="${day.weatherIcon != null}" th:text="${day.weatherIcon}">weather</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<script th:src="@{/JS/script.js}"></script>
+</body>
+
+</html>

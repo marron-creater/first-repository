@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.stereotype.Controller;
@@ -34,27 +35,7 @@ import tools.jackson.databind.ObjectMapper;
 public class CalendarController {
 
 	@GetMapping("/calendar")
-	String showCalendarJapanese(@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month,
-			@RequestParam(required = false) String weatherPlace, Model model) {
-		String currentPlace = (weatherPlace == null) ? "35.6785,139.6823" : weatherPlace;
-		YearMonth current = (year == null || month == null) ? YearMonth.now() : YearMonth.of(year, month);
-
-		model.addAttribute("year", current.getYear());
-		model.addAttribute("month", current.getMonthValue());
-		model.addAttribute("yearMonth", current);
-		model.addAttribute("dayList", dayOfWeekJapanese());
-		model.addAttribute("weatherplace", currentPlace);
-		model.addAttribute("lang","ja");
-		
-		List<List<CalendarElement>> calendarDate = generateDate(current.getYear(), current.getMonthValue());
-		injectWeatherIcon(calendarDate, currentPlace);
-		
-		model.addAttribute("date", calendarDate);
-		return "calendar";
-	}
-
-	@GetMapping("/calendar/en")
-	String showCalendarEnglish(@RequestParam(required = false) Integer year,
+	String showCalendarJapanese(@RequestParam(required = false) Integer year,
 			@RequestParam(required = false) Integer month, @RequestParam(required = false) String weatherPlace,
 			Model model) {
 		String currentPlace = (weatherPlace == null) ? "35.6785,139.6823" : weatherPlace;
@@ -63,14 +44,37 @@ public class CalendarController {
 		model.addAttribute("year", current.getYear());
 		model.addAttribute("month", current.getMonthValue());
 		model.addAttribute("yearMonth", current);
+		model.addAttribute("dayList", dayOfWeekJapanese());
+		model.addAttribute("weatherplace", currentPlace);
+		model.addAttribute("lang", "ja");
+
+		List<List<CalendarElement>> calendarDate = generateDate(current.getYear(), current.getMonthValue());
+		injectWeatherIcon(calendarDate, currentPlace);
+
+		model.addAttribute("date", calendarDate);
+		return "japaneseCalendar";
+	}
+
+	@GetMapping("/calendar/en")
+	String showCalendarEnglish(@RequestParam(required = false) Integer year,
+			@RequestParam(required = false) Integer month, @RequestParam(required = false) String weatherPlace,
+			Model model) {
+		String currentPlace = (weatherPlace == null) ? "35.6785,139.6823" : weatherPlace;
+		YearMonth current = (year == null || month == null) ? YearMonth.now() : YearMonth.of(year, month);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH);
+		String yearMonth = current.format(formatter);
+
+		model.addAttribute("year", current.getYear());
+		model.addAttribute("month", current.getMonthValue());
+		model.addAttribute("yearMonth", yearMonth);
 		model.addAttribute("dayList", dayOfWeekEnglish());
 		model.addAttribute("weatherplace", currentPlace);
-		model.addAttribute("lang","en");
-		
+		model.addAttribute("lang", "en");
+
 		List<List<CalendarElement>> calendarDate = generateDateEnglish(current.getYear(), current.getMonthValue());
 		injectWeatherIcon(calendarDate, currentPlace);
 		model.addAttribute("date", calendarDate);
-		return "calendar";
+		return "englishCalendar";
 	}
 
 	// 英語で曜日名を返すメソッド
@@ -94,7 +98,7 @@ public class CalendarController {
 		// カレンダーに出力するための日のみの値、月のみの値を取得.if,for文で使用するためint型
 		return getDateElementEnglish(currentMonth, date);
 	}
-	
+
 	public static List<List<CalendarElement>> generateDate(int currentYear, int currentMonth) {
 
 		// 日付データの準備
@@ -231,8 +235,8 @@ public class CalendarController {
 				boolean isToday = displayDate.isEqual(today);
 				boolean isLastMonth = (lastMonth == month);
 				boolean isNextMonth = (nextMonth == month);
-				String holidayName = holidayDate.get(displayDate);
-				week.add(new CalendarElement(displayDate,text, isToday, isLastMonth, isNextMonth, null, holidayName));
+				String holidayName = toEnglishHoliday(holidayDate.get(displayDate));
+				week.add(new CalendarElement(displayDate, text, isToday, isLastMonth, isNextMonth, null, holidayName));
 
 				// 日にちを進めて月日を更新する
 				displayDate = displayDate.plusDays(1);
@@ -365,6 +369,7 @@ public class CalendarController {
 		return holidayMap;
 	}
 
+	// 天気アイコンをCalendarElement注入する関数
 	private void injectWeatherIcon(List<List<CalendarElement>> calendarDate, String weatherPlace) {
 		String[] splitString = weatherPlace.split(",");
 		String latitude = splitString[0];
@@ -373,16 +378,17 @@ public class CalendarController {
 		LocalDate today = LocalDate.now();
 		LocalDate weatherEnd = today.plusDays(3);
 		LocalDate firstDate = calendarDate.get(0).get(0).getDate();
-		List<CalendarElement> lastWeek = calendarDate.get(calendarDate.size()-1);
-		LocalDate LastDay = lastWeek.get(lastWeek.size()-1).getDate();
-		if(weatherEnd.isBefore(firstDate)||today.isAfter(LastDay)) {
+		List<CalendarElement> lastWeek = calendarDate.get(calendarDate.size() - 1);
+		LocalDate LastDay = lastWeek.get(lastWeek.size() - 1).getDate();
+		if (weatherEnd.isBefore(firstDate) || today.isAfter(LastDay)) {
 			return;
 		}
-		
+
 		String[] weatherIcons = getWeatherIcon(latitude, longitude);
 		for (List<CalendarElement> week : calendarDate) {
 			for (CalendarElement element : week) {
 				LocalDate targetDate = element.getDate();
+
 				// 今日(0日後)から3日後までの4日間を判定
 				if (targetDate.isEqual(today)) {
 					element.setWeatherIcon(weatherIcons[0]); // 今日
@@ -395,5 +401,33 @@ public class CalendarController {
 				}
 			}
 		}
+	}
+
+
+	public static String toEnglishHoliday(String japaneseHoliday) {
+			 if(japaneseHoliday == null) {
+				 return null;
+			 }
+			 
+	 final Map<String, String> holidayMap = new HashMap<>();
+				holidayMap.put("元日", "New Year's Day");
+				holidayMap.put("成人の日", "Coming-of-Age Day");
+				holidayMap.put("建国記念日", "National Foundation Day");
+				holidayMap.put("天皇誕生日", "Emperor's Birthday");
+				holidayMap.put("春分の日", "Vernal Equinox Day");
+				holidayMap.put("昭和の日", "Showa Day");
+				holidayMap.put("憲法記念日", "Constitusion Memorial Day");
+				holidayMap.put("みどりの日", "greenery Day");
+				holidayMap.put("こどもの日", "Children's Day");
+				holidayMap.put("海の日", "Marine Day");
+				holidayMap.put("山の日", "Mountain Day");
+				holidayMap.put("敬老の日", "Respect-for-the-Aged Day");
+				holidayMap.put("秋分の日", "Autumnal Equinox Day");
+				holidayMap.put("スポーツの日", "Sports Day");
+				holidayMap.put("文化の日", "Culture Day");
+				holidayMap.put("勤労感謝の日", "Labor Thanksgiving Day");
+				holidayMap.put("祝日", "Holiday");
+			
+		return holidayMap.get(japaneseHoliday);
 	}
 }

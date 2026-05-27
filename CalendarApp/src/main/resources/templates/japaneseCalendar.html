@@ -10,29 +10,22 @@
 <body>
 	<div class="calendar-container">
 		<a th:href="@{/calendar(year=${month == 1 ? year - 1 : year},month=${month == 1 ? 12 : month -1})}">
-			<button th:text="#{button.prev}">先月</button>
+			<button>先月</button>
 		</a> <a th:href="@{/calendar(year=${month == 12 ? year + 1 :year},month=${month == 12 ? 1 :month + 1})}">
-			<button th:text="#{button.next}">来月</button>
+			<button>来月</button>
 		</a>
 		<h1>
 			<span th:text="${#temporals.format(yearMonth,'yyyy年M月')}">年月</span>
 		</h1>
-		<form th:action="@{/calendar}" method="get">
-
-			<input type="hidden" name="year" th:value="${year}" /> <input type="hidden" name="month"
-				th:value="${month}" />
-			<p>言語</p>
-			<select id="language-select">
-				<option value="ja" th:selected="${lang == 'ja'}">日本語</option>
-				<option value="en" th:selected="${lang == 'en'}">英語</option>
+		<form th:action="@{/calendar/en}" method="get">
+			<p>言語</p><select name="changeLanguage" onchange="location.href=value;">
+				<option th:value="@{/calendar(year=${year}, month=${month},)}">日本語</option>
+				<option th:value="@{/calendar/en(year=${year}, month=${month})}">英語</option>
 			</select>
 			<p>天気</p>
 			<select id="weather-select">
-				<option value="35.6785,139.6823" th:selected="${weatherplace == '35.6785,139.6823'}"
-					th:text="#{button.tokyo}">東京</option>
-				<option value="40.71,-74.01" th:selected="${weatherplace == '40.71,-74.01'}"
-					th:text="#{button.newyork}">
-					ニューヨーク</option>
+				<option value="35.6785,139.6823" th:selected="${weatherplace == '35.6785,139.6823'}">東京</option>
+				<option value="40.71,-74.01" th:selected="${weatherplace == '40.71,-74.01'}">ニューヨーク</option>
 			</select>
 		</form>
 		<table class="calendar">
