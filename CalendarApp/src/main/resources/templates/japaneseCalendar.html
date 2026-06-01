@@ -2,47 +2,61 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-	<meta charset="UTF-8">
-	<title>カレンダーアプリ</title>
-	<link th:href="@{/css/style.css}" rel="stylesheet">
+<meta charset="UTF-8">
+<title>日本語版カレンダーアプリ</title>
+<link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 
 <body>
 	<div class="calendar-container">
-		<a th:href="@{/calendar(year=${month == 1 ? year - 1 : year},month=${month == 1 ? 12 : month -1})}">
-			<button>先月</button>
-		</a> <a th:href="@{/calendar(year=${month == 12 ? year + 1 :year},month=${month == 12 ? 1 :month + 1})}">
-			<button>来月</button>
-		</a>
-		<h1>
-			<span th:text="${#temporals.format(yearMonth,'yyyy年M月')}">年月</span>
-		</h1>
-		<form th:action="@{/calendar/en}" method="get">
-			<p>言語</p><select name="changeLanguage" onchange="location.href=value;">
-				<option th:value="@{/calendar(year=${year}, month=${month},)}">日本語</option>
-				<option th:value="@{/calendar/en(year=${year}, month=${month})}">英語</option>
-			</select>
-			<p>天気</p>
-			<select id="weather-select">
-				<option value="35.6785,139.6823" th:selected="${weatherplace == '35.6785,139.6823'}">東京</option>
-				<option value="40.71,-74.01" th:selected="${weatherplace == '40.71,-74.01'}">ニューヨーク</option>
-			</select>
-		</form>
-		<table class="calendar">
+		<div class="calendar-header">
+			<a th:classappend="${ month == 1 && year == 1950} ? 'hidden' :''"
+				th:href="@{/calendar(year=${month == 1 ? year - 1 : year},month=${month == 1 ? 12 : month -1},weatherPlace=${weatherPlace})}">
+				<button>先月</button>
+			</a> <a th:classappend="${month == 12 && year == 2999} ? 'hidden' : ''"
+				th:href="@{/calendar(year=${month == 12 ? year + 1 :year},month=${month == 12 ? 1 :month + 1},weatherPlace=${weatherPlace})}">
+				<button>来月</button>
+			</a>
+			<h1>
+				<span th:text="${yearMonth}">年月</span>
+			</h1>
+			<form>
+				<div class="select-language">
+					<label>言語</label> <select onchange="location.href=value;">
+						<option
+							th:value="@{/calendar(year=${year}, month=${month},weatherPlace=${weatherPlace})}">日本語</option>
+						<option
+							th:value="@{/calendar/en(year=${year}, month=${month},weatherPlace=${weatherPlace})}">英語</option>
+					</select>
+				</div>
+				<div class="select-place">
+					<label>天気</label> <select onchange="location.href=value">
+						<option
+							th:value="@{/calendar(year=${year},month=${month},weatherPlace=${'35.6785,139.6823'})}"
+							th:selected="${weatherPlace == '35.6785,139.6823'}">東京</option>
+						<option
+							th:value="@{/calendar(year=${year},month=${month},weatherPlace=${'40.71,-74.01'})}"
+							th:selected="${weatherPlace == '40.71,-74.01'}">ニューヨーク</option>
+					</select>
+				</div>
+			</form>
+		</div>
+		<table>
 			<tr class="day">
 				<th th:each="dayOfWeek : ${dayList}" th:text="${dayOfWeek}">曜日</th>
 			</tr>
 			<tr class="day" th:each="week :${date}">
 				<td class="daydate" th:each="day : ${week}"
-					th:classappend="${day.today ? 'today-color' : ''}+ ${day.lastMonth||day.nextMonth ? 'gray-color ' :''}+ ${day.holidayName != null ? 'holiday-color' : ''}">
+					th:classappend="${day.today ? 'today-color ' : ''}+ ${day.lastMonth||day.nextMonth ? 'gray-color ' :''}+ ${day.holidayName != null ? 'holiday-color' : ''}">
 					<div class="date-text" th:text="${day.text}">日付</div>
-					<div th:if="${day.weatherIcon != null}" th:text="${day.weatherIcon}">☀</div>
-					<div th:if="${day.holidayName != null}" th:text="${day.holidayName}">祝日</div>
+					<div class="weatherIcon" th:if="${day.weatherIcon != null}"
+						th:text="${day.weatherIcon}">☀</div>
+					<div th:if="${day.holidayName != null}"
+						th:text="${day.holidayName}">祝日</div>
 				</td>
 			</tr>
 		</table>
 	</div>
-	<script th:src="@{/JS/calendar.js}"></script>
 </body>
 
 </html>

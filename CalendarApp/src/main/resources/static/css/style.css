@@ -1,71 +1,109 @@
 @charset "UTF-8";
 
+/*カレンダーの大枠*/
 .calendar-container {
 	border: 3px solid black;
 	height: auto;
-	margin: 0 auto;
+	margin: auto;
 	border-radius: 5px;
-	color: #1a1a1a;
+	background: #99c1f1;
 	width: 1000px;
 }
 
+/*カレンダーのヘッダー*/
+.calendar-header {
+	display: grid;
+	grid-template-columns: 0.5fr 0.5fr 1fr 1fr;
+	grid-template-rows: 1fr;
+}
+
+/*先月次月のボタン*/
+button {
+	margin: 30px 30px 30px;
+	height: 100px;
+	width: 100px;
+}
+
+/*言語のセレクトボックス*/
+.select-language {
+	display: flex;
+	white-space: nowrap;
+	font-size: 20px;
+	line-height: 50px;
+	margin: 30px 20px 10px 180px;
+	grid-column: 1/2;
+}
+
+/*座標のセレクトボックス*/
+.select-place {
+	display: flex;
+	white-space: nowrap;
+	font-size: 20px;
+	line-height: 50px;
+	margin: 0px 20px 0px 180px;
+	grid-column: 2/3;
+}
+
+/*年月*/
 h1 {
 	height: 80px;
 	line-height: 80px;
 	text-align: center;
-	font-size: 24px;
-	margin: 0;
+	font-size: 30px;
+	margin: 30px 30px 30px;
 }
 
-.dayOfweekString {
-	text-align: left;
-	vertical-align: top;
-	height: 80px;
-	padding: 5px 10px;
-	border: 1px solid black;
-	font-weight: bold;
-}
-
-.day {
-	padding: 0 30px 100px;
-}
-
+/*カレンダーのマス全体の設定*/
 table {
 	width: 100%;
+	border-collapse: separate;
 	table-layout: fixed;
+	border-spacing: 10px;
 }
 
+/*曜日名のマス*/
 th {
 	text-align: center;
 	padding: 10px;
 	border: 1px solid black;
-	font-weight: normal;
 	font-size: 14px;
+	background: white;
 }
 
+/*日付のマス*/
 td {
 	text-align: left;
 	vertical-align: top;
 	height: 80px;
 	padding: 5px 10px;
 	border: 1px solid black;
-	font-weight: bold;
+	background: white;
 }
 
+.hidden{
+	visibility: hidden;
+}
 .today-color {
 	border: 3px solid #2ecc71;
 }
+
 .gray-color {
 	background: darkgray;
 }
 
 .holiday-color {
-	color:red !important;
+	color: red;
 }
+
 .day td:first-child {
 	color: red;
 }
 
 .day td:last-child {
 	color: blue;
+}
+
+.weatherIcon {
+	color:black;
+	font-size:30px;
 }
