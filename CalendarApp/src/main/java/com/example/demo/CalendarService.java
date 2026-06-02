@@ -19,10 +19,6 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -51,26 +47,31 @@ public class CalendarService {
 		return japaneseCalendarElement;
 	}
 
-	// 英語で曜日名を返すメソッド
-	static String[] dayOfWeekEnglish() {
-		final String[] dayOfWeekStrings = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
-				"Saturday" };
-		return dayOfWeekStrings;
-	}
+	public static final List<String> DAYOFWEEKENGLISH = List.of("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
+			"Friday", "Saturday");
 
-	// 日本語で曜日名を返すメソッド
-	static String[] dayOfWeekJapanese() {
-		final String[] dayOfWeekStrings = { "日", "月", "火", "水", "木", "金", "土" };
-		return dayOfWeekStrings;
-	}
+	public static final List<String> DAYOFWEEKJAPANESE = List.of("日", "月", "火", "水", "木", "金", "土");
 
+	public static final String DEFAULTPLACE = "35.6785,139.6823";
+
+	// HTMLに既定値以上の年が入ったら変換して上限、下限値に設定するためメソッド
+	public static void a(int currentYear,int currentMonth){
+	if (currentYear < 1950) {
+		currentYear = 1950;
+		currentMonth = 1;
+	} else if (currentYear > 2999) {
+		currentYear = 2999;
+		currentMonth = 12;
+	}
+	}
+	
 	// カレンダーの始まりを日曜日に揃えるため取得した日から日曜日まで日付を戻す関数
 	private static LocalDate backDayToSunday(LocalDate firstDay) {
 		for (int i = 0; i < 6; i++) {
-			if (firstDay.getDayOfWeek() == DayOfWeek.SUNDAY) {
-				break;
-			} else {
+			if (firstDay.getDayOfWeek() != DayOfWeek.SUNDAY) {
 				firstDay = firstDay.minusDays(1);
+			} else {
+				return firstDay;
 			}
 		}
 		return firstDay;
@@ -80,12 +81,7 @@ public class CalendarService {
 	private static List<List<CalendarElement>> getDateElement(int currentMonth, LocalDate displayDate,
 			boolean isEnglish) {
 
-		// 日付とその要素を入れる２次元リストを作成
-		List<List<CalendarElement>> displayArray = new ArrayList<>();
-		LocalDate today = LocalDate.now();
-		int day = displayDate.getDayOfMonth();
-		int month = displayDate.getMonthValue();
-
+		// Mapの作成。休日のデータを取得
 		Map<LocalDate, String> holidayDate = new HashMap<>();
 		try {
 			holidayDate = holidayMap();
@@ -93,6 +89,12 @@ public class CalendarService {
 			System.out.println("ファイルが読み込めませんでした。");
 			e.printStackTrace();
 		}
+
+		// 日付とその要素を入れる２次元リストを作成
+		List<List<CalendarElement>> displayArray = new ArrayList<>();
+		int month = displayDate.getMonthValue();
+		int day = displayDate.getDayOfMonth();
+
 		// カレンダーの最大が6週のため6行分ループを回す。
 		for (int i = 0; i < 6; i++) {
 			// 5行目以降で日が7日よりも小さい場合は次月のみの行ができてしまうためループを抜ける
@@ -102,7 +104,6 @@ public class CalendarService {
 
 			// １週間分の情報を入れるリストを作成
 			List<CalendarElement> week = new ArrayList<>();
-
 			// textの準備
 			for (int j = 0; j < 7; j++) {
 				String text;
@@ -111,11 +112,7 @@ public class CalendarService {
 					text = month + "/" + day;
 				} else {
 					// 一般的な場合は日のみ表示
-					if (isEnglish) {
-						text = Integer.toString(day);
-					} else {
-						text = day + "日";
-					}
+					text = isEnglish ? Integer.toString(day) : day + "日";
 				}
 
 				// 年の繰り上げ、繰り下げを加味して先月、翌月の判定用の変数の作成
@@ -123,22 +120,18 @@ public class CalendarService {
 				if (lastMonth == 0) {
 					lastMonth = 12;
 				}
-				int nextMonth = (currentMonth + 1) % 12;
+
+				/* L126 */ int nextMonth = (currentMonth + 1) % 12;
 				if (nextMonth == 0) {
 					nextMonth = 12;
 				}
 
 				// クラスの要素をそれぞれ判定してリストに格納
-				boolean isToday = displayDate.isEqual(today);
+				/* L132 */ boolean isToday = displayDate.isEqual(LocalDate.now());
 				boolean isLastMonth = (lastMonth == month);
 				boolean isNextMonth = (nextMonth == month);
-				String holidayName;
-				if (isEnglish) {
-					// 祝日の翻訳
-					holidayName = toEnglishHoliday(holidayDate.get(displayDate));
-				} else {
-					holidayName = holidayDate.get(displayDate);
-				}
+				String holidayName = isEnglish ? toEnglishHoliday(holidayDate.get(displayDate))
+						: holidayDate.get(displayDate);// 祝日の翻訳
 				week.add(new CalendarElement(displayDate, text, isToday, isLastMonth, isNextMonth, null, holidayName));
 
 				// 日にちを進めて月日を更新する
@@ -150,23 +143,8 @@ public class CalendarService {
 			// 週のリストを一つのリストに入れる
 			displayArray.add(week);
 		}
+
 		return displayArray;
-	}
-
-	// HTMLに情報を送るクラス
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Getter
-	public static class CalendarElement {
-		private LocalDate date;
-		private String text;
-		private boolean isToday;
-		private boolean isLastMonth;
-		private boolean isNextMonth;
-		@Setter
-		private String weatherIcon;
-		private String holidayName;
-
 	}
 
 	// 天気のアイコンを取得して返すメソッド
@@ -186,22 +164,17 @@ public class CalendarService {
 		response = client.send(request, HttpResponse.BodyHandlers.ofString());
 		root = mapper.readTree(response.body());
 
-		// 天気コードが取得できているか確認
-		if (!root.has("daily") || !root.get("daily").has("weather_code")) {
-			throw new IllegalArgumentException("天気コードが取得できていません。");
-		}
-
 		return weatherCodeToIcon(root.get("daily").get("weather_code"), today);
 	}
 
 	// 受け取った天気コードを絵文字に変換するメソッド
 	private static String[] weatherCodeToIcon(JsonNode weatherCodeNode, LocalDate displayDay) {
 
-		int[] weatherCodeArray = new int[weatherCodeNode.size()];// 天気コードを格納する配列
+		int[] weatherCodeArray = new int[weatherCodeNode.size()]; // 天気コードを格納する配列 L200
 		// それぞれのコードに対応する絵文字に変換する
 		String[] weatherIcon = new String[weatherCodeNode.size()];
 		for (int i = 0; i < weatherCodeNode.size(); i++) {
-			weatherCodeArray[i] = weatherCodeNode.get(i).asInt();// 比較するためint型に変換
+			weatherCodeArray[i] = weatherCodeNode.get(i).asInt(); // 比較するためint型に変換
 			switch (weatherCodeArray[i]) {
 			case 0, 1, 2:
 				weatherIcon[i] = "☀";
@@ -230,7 +203,7 @@ public class CalendarService {
 		Map<LocalDate, String> holidayMap = new HashMap<>();
 
 		// ファイルパスの取得
-		Path path = Paths.get("src/main/resources/static/csv/syukujitsu.csv");
+		/* L233 */Path path = Paths.get("src/main/resources/static/csv/syukujitsu.csv");
 		List<String> lines;
 		try {
 			// すべての行をListに格納
@@ -283,7 +256,7 @@ public class CalendarService {
 				LocalDate targetDate = element.getDate();
 
 				// ４日分の天気アイコンをそれぞれの対応する日付に注入
-				if (targetDate.isEqual(today)) {
+				/* L286 */if (targetDate.isEqual(today)) {
 					element.setWeatherIcon(weatherIcons[0]); // 今日
 				} else if (targetDate.isEqual(today.plusDays(1))) {
 					element.setWeatherIcon(weatherIcons[1]); // 1日後
