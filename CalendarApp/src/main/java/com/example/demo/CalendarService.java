@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -54,17 +55,23 @@ public class CalendarService {
 
 	public static final String DEFAULTPLACE = "35.6785,139.6823";
 
-	// HTMLに既定値以上の年が入ったら変換して上限、下限値に設定するためメソッド
-	public static void a(int currentYear,int currentMonth){
-	if (currentYear < 1950) {
-		currentYear = 1950;
-		currentMonth = 1;
-	} else if (currentYear > 2999) {
-		currentYear = 2999;
-		currentMonth = 12;
+	public static YearMonthPlace returnYearMonthPlace(CalendarRequestDto form, boolean isError) {
+		if (isError) {
+			return new YearMonthPlace(CalendarService.DEFAULTPLACE, LocalDate.now().getYear(),
+					LocalDate.now().getMonthValue());
+		} else {
+			return new YearMonthPlace(form.getWeatherPlace(), Integer.parseInt(form.getYear()),
+					Integer.parseInt(form.getMonth()));
+		}
 	}
+
+	public static int checkMonthRange(int month) {
+		if (month < 1 || month > 12) {
+			month = LocalDate.now().getMonthValue();
+		}
+		return month;
 	}
-	
+
 	// カレンダーの始まりを日曜日に揃えるため取得した日から日曜日まで日付を戻す関数
 	private static LocalDate backDayToSunday(LocalDate firstDay) {
 		for (int i = 0; i < 6; i++) {
@@ -202,12 +209,13 @@ public class CalendarService {
 		// 読み込むためのMapの作成
 		Map<LocalDate, String> holidayMap = new HashMap<>();
 
-		// ファイルパスの取得
-		/* L233 */Path path = Paths.get("src/main/resources/static/csv/syukujitsu.csv");
+		Path startPath = Paths.get(".");
+		List<Path> csvPath = Files.walk(startPath).filter(path -> path.toString().endsWith(".csv"))
+				.filter(path -> !path.startsWith(startPath.resolve("target"))).collect(Collectors.toList());
 		List<String> lines;
 		try {
 			// すべての行をListに格納
-			lines = Files.readAllLines(path, Charset.forName("Shift_JIS"));
+			lines = Files.readAllLines(csvPath.get(0), Charset.forName("Shift_JIS"));
 		} catch (IOException e) {
 			System.out.println("ファイル読み込み失敗");
 			e.printStackTrace();
@@ -254,16 +262,11 @@ public class CalendarService {
 		for (List<CalendarElement> week : calendarDate) {
 			for (CalendarElement element : week) {
 				LocalDate targetDate = element.getDate();
-
 				// ４日分の天気アイコンをそれぞれの対応する日付に注入
-				/* L286 */if (targetDate.isEqual(today)) {
-					element.setWeatherIcon(weatherIcons[0]); // 今日
-				} else if (targetDate.isEqual(today.plusDays(1))) {
-					element.setWeatherIcon(weatherIcons[1]); // 1日後
-				} else if (targetDate.isEqual(today.plusDays(2))) {
-					element.setWeatherIcon(weatherIcons[2]); // 2日後
-				} else if (targetDate.isEqual(today.plusDays(3))) {
-					element.setWeatherIcon(weatherIcons[3]); // 3日後
+				for (int i = 0; i < weatherIcons.length; i++) {
+					if (targetDate.isEqual(today.plusDays(i))) {
+						element.setWeatherIcon(weatherIcons[i]);
+					}
 				}
 			}
 		}

@@ -7,31 +7,24 @@ import java.util.Locale;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+import jakarta.validation.Valid;
 
 @Controller
 public class CalendarController {
 
 	// 日本語ページ用
 	@GetMapping("/calendar")
-	String showCalendarJapanese(@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, @RequestParam(required = false) String weatherPlace,
-			Model model) {
+	String showCalendarJapanese(@Valid @ModelAttribute CalendarRequestDto form, BindingResult result, Model model) {
 
-		// HTMLから値を受け取ってきていない場合の初期値
-		String currentPlace = (weatherPlace == null) ? CalendarService.DEFAULTPLACE : weatherPlace;
-		int currentYear = (year == null) ? LocalDate.now().getYear() : year;
-		int currentMonth = (month == null) ? LocalDate.now().getMonthValue() : month;
-
-		// HTMLに既定値以上の年が入ったら変換して上限、下限値に設定するため
-		if (currentYear < 1950) {
-			currentYear = 1950;
-			currentMonth = 1;
-		} else if (currentYear > 2999) {
-			currentYear = 2999;
-			currentMonth = 12;
-		}
+		// 入力された値が正しくなくても初期画面になるようにそれぞれの値を処理
+		YearMonthPlace yearMonthPlace = CalendarService.returnYearMonthPlace(form, result.hasErrors());
+		String currentPlace = yearMonthPlace.weatherPlace();
+		int currentYear = yearMonthPlace.year();
+		int currentMonth = yearMonthPlace.month();
 
 		// HTMLにデータを渡す
 		model.addAttribute("year", currentYear);
@@ -51,23 +44,13 @@ public class CalendarController {
 
 	// 英語ページ用
 	@GetMapping("/calendar/en")
-	String showCalendarEnglish(@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, @RequestParam(required = false) String weatherPlace,
-			Model model) {
+	String showCalendarEnglish(@Valid @ModelAttribute CalendarRequestDto form, BindingResult result, Model model) {
 
-		// HTMLから値を受け取ってきていない場合の初期値
-		String currentPlace = (weatherPlace == null) ? "35.6785,139.6823" : weatherPlace;
-		int currentYear = (year == null) ? LocalDate.now().getYear() : year;
-		int currentMonth = (month == null) ? LocalDate.now().getMonthValue() : month;
-
-		// HTMLに既定値以上の年が入ったら変換して上限、下限値に設定するため
-		if (currentYear < 1950) {
-			currentYear = 1950;
-			currentMonth = 1;
-		} else if (currentYear > 2999) {
-			currentYear = 2999;
-			currentMonth = 12;
-		}
+		// 入力された値が正しくなくても初期画面になるようにそれぞれの値を処理
+		YearMonthPlace yearMonthPlace = CalendarService.returnYearMonthPlace(form, result.hasErrors());
+		String currentPlace = yearMonthPlace.weatherPlace();
+		int currentYear = yearMonthPlace.year();
+		int currentMonth = yearMonthPlace.month();
 
 		// 月を英語にしてフォーマット
 		LocalDate date = LocalDate.of(currentYear, currentMonth, 1);
